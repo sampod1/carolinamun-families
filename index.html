@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CarolinaMUN Families</title>
+  <meta name="description" content="CarolinaMUN MUNtorship big/little family tree.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='30' fill='%234B9CD3'/><path d='M32 14v14M20 40l12-12 12 12M20 40v8M44 40v8M32 28v20' stroke='white' stroke-width='5' fill='none' stroke-linecap='round'/></svg>">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#/">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 3v6M5 15l7-6 7 6M5 15v5M19 15v5M12 9v11" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="brand-text">CarolinaMUN <b>Families</b></span>
+      </a>
+      <div class="search" role="search">
+        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" fill="none"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <input id="search" type="search" placeholder="Find someone…" autocomplete="off"
+               aria-label="Search members" aria-controls="search-results" aria-expanded="false">
+        <ul id="search-results" class="search-results" role="listbox" hidden></ul>
+      </div>
+    </div>
+  </header>
+
+  <div id="edit-banner" class="edit-banner" hidden></div>
+
+  <main id="view" tabindex="-1"></main>
+
+  <footer class="footer">
+    <p>CarolinaMUN MUNtorship · <span id="updated"></span> · <a href="#" id="editor-link">Editor sign in</a></p>
+  </footer>
+
+  <dialog id="dialog" class="dialog" aria-label="Editor"></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
