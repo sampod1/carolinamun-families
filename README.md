@@ -39,13 +39,20 @@ Anyone can open **Add yourself** (top of the site) and submit their photo, name,
 3. **Responses** tab → **Link to Sheets** so submissions land in a private spreadsheet.
 4. Click **Send → link icon**, copy the link. On the site (signed in as editor), open **Add yourself → Add the form link** and paste it.
 
-**Approving a submission**
-1. Open the responses Sheet. Each row is one submission; the photo is a Google Drive link.
-2. Download their photo from the Drive link.
-3. On the site, search their name → **Edit** (or **+ Add member** / **+ Add a little** if they're new). Fill in class year, phone and email, upload the photo, then **Save**.
-4. Add an "Approved" column in the Sheet and mark the row, so you know it's done.
+**Approving a submission: tick the box**
 
-To reject, just skip the row (and delete it if you like). To close sign-ups, clear the form link or turn off "Accepting responses" in the form.
+The responses Sheet runs a small script ([`apps-script/FamilyTreeSync.gs`](apps-script/FamilyTreeSync.gs)). Every new response gets an **Approve** checkbox. Tick it and the script publishes that person to the site within about a minute, then writes the result in the **Status** column:
+- If someone on the site has the same email or name, their class year, phone, email and photo are updated. Their big never changes.
+- Otherwise they're added as a new member: under their big if the name they gave matches someone on the site, or on "Waiting on a big" if not.
+- Photos come straight from Drive, resized by Google (iPhone HEIC photos are converted too).
+- If something goes wrong, Status says `Error: …` and the box unticks itself so you can try again.
+
+To reject, just don't tick it (delete the row if you like). To close sign-ups, clear the form link on the site or turn off "Accepting responses" in the form. You can still approve by hand with the site editor anytime.
+
+**One-time script setup** (already done if the Sheet has a *Family Tree* menu)
+1. Make a GitHub token for the script: Fine-grained tokens → Generate new token → *Only select repositories* → this repo → **Contents: Read and write**.
+2. In the responses Sheet: **Extensions → Apps Script**, replace the placeholder code with `apps-script/FamilyTreeSync.gs`, and save.
+3. Reload the Sheet. Use **Family Tree → Set up automation**. Google will ask you to authorize the script ("Google hasn't verified this app" → *Advanced* → *Go to … (unsafe)* → *Allow*; it's your own script). Run **Set up automation** again if needed, and paste the token when asked.
 
 **Privacy:** phone numbers and emails that you approve are visible to anyone with the site link, and they're stored in this public repo. The form's consent box makes sure people agree to that first.
 
@@ -55,7 +62,8 @@ To reject, just skip the row (and delete it if you like). To close sign-ups, cle
 | --- | --- |
 | `index.html`, `styles.css`, `app.js` | The site itself |
 | `data.json` | Everyone in the tree, plus the sign-up form link. The editor writes this; you can also edit it on GitHub by hand |
-| `photos/` | Member photos (the editor uploads these, cropped square) |
+| `photos/` | Member photos (the editor and the Sheet script upload these) |
+| `apps-script/FamilyTreeSync.gs` | The responses Sheet's Approve-box script (a copy for reference) |
 
 Each person in `data.json` looks like:
 ```json
