@@ -91,7 +91,13 @@ function onEditInstalled(e) {
   const cols = columns_(sheet, false);
   if (!cols.approve || range.getColumn() > cols.approve || range.getLastColumn() < cols.approve) return;
   for (let r = Math.max(2, range.getRow()); r <= range.getLastRow(); r++) {
-    if (sheet.getRange(r, cols.approve).getValue() === true) publishRow_(sheet, r, cols);
+    if (sheet.getRange(r, cols.approve).getValue() !== true) continue;
+    // A box ticked on an empty row has nothing to publish; just untick it.
+    if (!cols.name || !String(sheet.getRange(r, cols.name).getValue()).trim()) {
+      sheet.getRange(r, cols.approve).setValue(false);
+      continue;
+    }
+    publishRow_(sheet, r, cols);
   }
 }
 
