@@ -11,6 +11,8 @@
   let people = new Map();
   let children = new Map();
   let heads = [];
+  let families = [];            // [{ name, heads: [...] }]; heads sharing a family name co-own one tree
+  let familyOfHead = new Map();
   let waiting = [];
   let descCache = new Map();
 
@@ -76,6 +78,21 @@
 
     heads = [...people.values()].filter(isHead);
     waiting = [...people.values()].filter((p) => !p.bigId && !isHead(p));
+
+    // Heads with the same family name are co-heads of one family.
+    const byName = new Map();
+    families = [];
+    familyOfHead = new Map();
+    heads.forEach((h) => {
+      const key = h.family ? h.family.trim().toLowerCase() : `id:${h.id}`;
+      if (!byName.has(key)) {
+        const fam = { name: h.family || `${h.name.split(" ")[0]}'s Family`, heads: [] };
+        byName.set(key, fam);
+        families.push(fam);
+      }
+      byName.get(key).heads.push(h);
+      familyOfHead.set(h.id, byName.get(key));
+    });
     document.getElementById("updated").textContent = data.updated ? `Updated ${data.updated}` : "";
   }
 
@@ -103,10 +120,11 @@
     return line;
   }
   const headOf = (p) => ancestors(p)[0] || p;
-  const familyName = (p) => {
-    const h = headOf(p);
-    return isHead(h) ? h.family || `${h.name.split(" ")[0]}'s Family` : "";
-  };
+  const familyOf = (p) => familyOfHead.get(headOf(p).id) || null;
+  const familyName = (p) => (familyOf(p) ? familyOf(p).name : "");
+  const familySize = (f) => f.heads.reduce((n, h) => n + 1 + descendants(h.id), 0);
+  const familyDepth = (f) => Math.max(...f.heads.map((h) => generations(h.id)));
+  const familyLittles = (f) => f.heads.flatMap((h) => littlesOf(h.id));
 
   // ── Render helpers ──────────────────────────────────────────
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -172,12 +190,17 @@
     </li>`;
   }
 
-  function familyTree(head, currentId) {
-    const rows = generations(head.id);
+  // Co-headed families get a family-name pill on top so the heads hang off it as siblings.
+  function familyTree(fam, currentId) {
+    const shared = fam.heads.length > 1;
+    const rows = familyDepth(fam);
     const labels = Array.from({ length: rows }, (_, i) => `<div class="gen-label"><span>Generation</span> ${i + 1}</div>`).join("");
+    const root = shared
+      ? `<li><span class="fam-pill">${esc(fam.name)}</span><ul>${fam.heads.map((h) => treeNode(h, currentId)).join("")}</ul></li>`
+      : treeNode(fam.heads[0], currentId);
     return `<div class="tree-wrap">
-      <div class="gen-rail" aria-hidden="true">${labels}</div>
-      <div class="tree-scroll"><ul class="tree">${treeNode(head, currentId)}</ul></div>
+      <div class="gen-rail" aria-hidden="true">${shared ? '<div class="gen-spacer"></div>' : ""}${labels}</div>
+      <div class="tree-scroll"><ul class="tree">${root}</ul></div>
     </div>`;
   }
 
@@ -211,9 +234,9 @@
   const view = document.getElementById("view");
 
   function renderHome() {
-    const sorted = [...heads].sort((a, b) => descendants(b.id) - descendants(a.id) || a.name.localeCompare(b.name));
+    const sorted = [...families].sort((a, b) => familySize(b) - familySize(a) || a.name.localeCompare(b.name));
     const inTree = people.size - waiting.length;
-    const maxGen = Math.max(1, ...heads.map((h) => generations(h.id)));
+    const maxGen = Math.max(1, ...families.map(familyDepth));
     document.title = "CarolinaMUN Families";
 
     view.innerHTML = `
@@ -221,7 +244,7 @@
         <h1>MUNtorship Family Tree</h1>
         <p>Every big and little in CarolinaMUN. Pick a family, then click through a big's littles, and their littles after that.</p>
         <div class="stats">
-          <div class="stat"><b>${heads.length}</b><span>families</span></div>
+          <div class="stat"><b>${families.length}</b><span>families</span></div>
           <div class="stat"><b>${inTree}</b><span>members in a family</span></div>
           <div class="stat"><b>${maxGen}</b><span>generations deep</span></div>
         </div>
@@ -231,12 +254,12 @@
       <section class="section">
         <div class="section-head"><h2>Families</h2><span class="count">sorted by size</span></div>
         <div class="grid">
-          ${sorted.map((h) => `<a class="card" href="${link(h)}">
-              ${avatar(h)}
-              <div class="family-name">${esc(familyName(h))}</div>
-              <div class="sub">Started by ${esc(h.name)}</div>
-              ${avatarStack(littlesOf(h.id))}
-              <div class="foot has">${plural(descendants(h.id) + 1, "member")} · ${plural(generations(h.id), "generation")} <span aria-hidden="true">›</span></div>
+          ${sorted.map((f) => `<a class="card" href="${link(f.heads[0])}">
+              <div class="heads">${f.heads.map((h) => avatar(h)).join("")}</div>
+              <div class="family-name">${esc(f.name)}</div>
+              <div class="sub">Started by ${esc(f.heads.map((h) => h.name).join(" & "))}</div>
+              ${avatarStack(familyLittles(f))}
+              <div class="foot has">${plural(familySize(f), "member")} · ${plural(familyDepth(f), "generation")} <span aria-hidden="true">›</span></div>
             </a>`).join("")}
           ${waiting.length ? `<a class="card waiting" href="#/waiting">
               <div class="big-num">${waiting.length}</div>
@@ -256,9 +279,10 @@
     const line = ancestors(p);
     const big = line[line.length - 1];
     const gen = line.length + 1;
-    const head = headOf(p);
+    const family = familyOf(p);
     const first = p.name.split(" ")[0];
-    const sibs = big ? littlesOf(big.id).filter((s) => s.id !== p.id) : [];
+    const coHeads = !big && family ? family.heads.filter((h) => h.id !== p.id) : [];
+    const sibs = big ? littlesOf(big.id).filter((s) => s.id !== p.id) : coHeads;
     const fam = familyName(p);
     const total = descendants(p.id);
     document.title = `${p.name} · CarolinaMUN Families`;
@@ -266,7 +290,8 @@
     const crumbs = [`<a href="#/">All families</a>`];
     if (!fam) crumbs.push(`<a href="#/waiting">Waiting on a big</a>`);
     line.forEach((a, i) => crumbs.push(`<a href="${link(a)}">${esc(i === 0 ? fam : a.name)}</a>`));
-    crumbs.push(`<span class="here">${esc(line.length ? p.name : fam || p.name)}</span>`);
+    if (coHeads.length) crumbs.push(`<span>${esc(fam)}</span>`);
+    crumbs.push(`<span class="here">${esc(line.length || coHeads.length ? p.name : fam || p.name)}</span>`);
 
     const chips = [];
     if (fam) chips.push(`<span class="chip">${esc(fam)}</span>`, `<span class="chip">Generation ${gen}</span>`);
@@ -279,6 +304,7 @@
     if (line.length > 1) lineage += ` · Grand-big: <a href="${link(line[line.length - 2])}">${esc(line[line.length - 2].name)}</a>`;
     if (!big && !fam) lineage = "Waiting to be matched with a big.";
     if (!big && fam) lineage = `Head of ${esc(fam)} · ${plural(total, "descendant")}`;
+    if (coHeads.length) lineage = `Co-head of ${esc(fam)} with ${coHeads.map((h) => `<a href="${link(h)}">${esc(h.name)}</a>`).join(" & ")} · ${plural(total, "descendant")}`;
 
     const contact = [];
     if (p.phone) contact.push(`<a class="contact" href="tel:${esc(p.phone.replace(/[^\d+]/g, ""))}">${ICONS.phone}${esc(p.phone)}</a>`);
@@ -303,10 +329,10 @@
         ? `<section class="section">
             <div class="section-head">
               <h2>${esc(/family$/i.test(fam) ? fam : `${fam} family`)} tree</h2>
-              <span class="count">${plural(descendants(head.id) + 1, "member")} · ${plural(generations(head.id), "generation")}</span>
+              <span class="count">${plural(familySize(family), "member")} · ${plural(familyDepth(family), "generation")}</span>
               ${editBtn("+ Add a little", `add-little:${p.id}`)}
             </div>
-            ${familyTree(head, p.id)}
+            ${familyTree(family, p.id)}
           </section>`
         : `<section class="section">
             <div class="section-head"><h2>${esc(first)}'s littles</h2>${editBtn("+ Add a little", `add-little:${p.id}`)}</div>
@@ -314,7 +340,7 @@
           </section>`}
 
       ${sibs.length ? `<section class="section">
-        <div class="section-head"><h2>Siblings</h2><span class="count">also littles of ${esc(big.name)}</span></div>
+        <div class="section-head"><h2>Siblings</h2><span class="count">${big ? `also littles of ${esc(big.name)}` : `co-heads of ${esc(fam)}`}</span></div>
         <div class="siblings">${sibs.map((s) => `<a class="sib" href="${link(s)}">${avatar(s, "xs")}${esc(s.name)}</a>`).join("")}</div>
       </section>` : ""}`;
     centerCurrentNode();
@@ -733,7 +759,7 @@
         </label>
         <label class="family-field" ${p.bigId ? "hidden" : ""}>Family name
           <input name="family" value="${esc(p.family)}" placeholder="Leave blank if they're waiting on a big" autocomplete="off">
-          <span class="hint small">Fill this in to put them at the top of a family.</span>
+          <span class="hint small">Fill this in to put them at the top of a family. Use an existing family's name to make them co-heads.</span>
         </label>
         <div class="form-status" role="status"></div>
         <div class="actions">
@@ -820,6 +846,9 @@
             const i = d2.people.findIndex((x) => x.id === id);
             if (i >= 0) d2.people[i] = record;
             else d2.people.push(record);
+            if (existing && !existing.bigId && existing.family && record.family && record.family !== existing.family) {
+              d2.people.forEach((x) => { if (x.id !== id && !x.big && x.family === existing.family) x.family = record.family; });
+            }
           }, existing ? `Update ${name}` : `Add ${name}`);
           dialog.dataset.busy = "";
           dialog.close();
