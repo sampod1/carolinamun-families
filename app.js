@@ -455,6 +455,10 @@
       try { msg = (await res.json()).message || msg; } catch { /* no body */ }
       const err = new Error(`GitHub said: ${msg} (${res.status})`);
       err.status = res.status;
+      // Fine-grained tokens that can read but not write fail saves with a 403.
+      if (res.status === 403 && opts.method === "PUT") {
+        err.message = "Your token can read the repo but not save to it. On GitHub, edit the token → Repository permissions → Contents → Read and write, then try again.";
+      }
       throw err;
     }
     return res.status === 204 ? null : res.json();
