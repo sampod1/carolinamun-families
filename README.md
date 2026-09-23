@@ -71,4 +71,6 @@ Each person in `data.json` looks like:
 ```
 `big` is the big's `id`. The `id` never changes, even if a name is edited.
 
+**Changing the site's code?** Bump the `?v=` tag on `styles.css` and `app.js` in `index.html` so browsers fetch the new files right away instead of using cached ones for up to 10 minutes.
+
 **Lineage rule:** a person's big is whoever they were *first* assigned to. Returners who get put in a new group for points later keep their original big here.
