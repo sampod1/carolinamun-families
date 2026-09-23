@@ -155,17 +155,40 @@
     return bits.join(" · ");
   }
 
-  function personCard(p) {
+  // showBig: add a "Little of …" line, for generations where cards have different bigs.
+  function personCard(p, showBig = false) {
     const n = littlesOf(p.id).length;
     const foot = n
       ? `<div class="foot has">${plural(n, "little")} <span aria-hidden="true">›</span></div>`
       : `<div class="foot">No littles yet</div>`;
+    const big = showBig && p.bigId ? people.get(p.bigId) : null;
     return `<a class="card" href="${link(p)}">
       ${avatar(p)}
       <div class="name">${esc(p.name)}</div>
       <div class="sub">${esc(yearLine(p)) || "&nbsp;"}</div>
+      ${big ? `<div class="little-of">Little of <b>${esc(big.name)}</b></div>` : ""}
       ${foot}
     </a>`;
+  }
+
+  const bySize = (a, b) => descendants(b.id) - descendants(a.id) || a.name.localeCompare(b.name);
+
+  // Everyone below p, one list per generation, with siblings kept next to each other.
+  function generationsBelow(p) {
+    const levels = [];
+    let current = [p];
+    while (current.length) {
+      current = current.flatMap((q) => littlesOf(q.id).sort(bySize));
+      if (current.length) levels.push(current);
+    }
+    return levels;
+  }
+
+  function relativeLabel(first, k) {
+    if (k === 1) return `${first}'s littles`;
+    if (k === 2) return `${first}'s grand-littles`;
+    if (k === 3) return `${first}'s great-grand-littles`;
+    return `${k} generations below ${first}`;
   }
 
   function avatarStack(list, max = 5) {
@@ -232,7 +255,9 @@
   function renderPerson(p) {
     const line = ancestors(p);
     const big = line[line.length - 1];
-    const kids = littlesOf(p.id).sort((a, b) => descendants(b.id) - descendants(a.id) || a.name.localeCompare(b.name));
+    const gen = line.length + 1;
+    const levels = generationsBelow(p);
+    const first = p.name.split(" ")[0];
     const sibs = big ? littlesOf(big.id).filter((s) => s.id !== p.id) : [];
     const fam = familyName(p);
     const total = descendants(p.id);
@@ -244,7 +269,7 @@
     crumbs.push(`<span class="here">${esc(line.length ? p.name : fam || p.name)}</span>`);
 
     const chips = [];
-    if (fam) chips.push(`<span class="chip">${esc(fam)}</span>`);
+    if (fam) chips.push(`<span class="chip">${esc(fam)}</span>`, `<span class="chip">Generation ${gen}</span>`);
     if (p.classYear) chips.push(`<span class="chip">${esc(classLabel(p.classYear))}</span>`);
     if (p.cohort) chips.push(`<span class="chip">${esc(cohortLabel(p.cohort))}</span>`);
     if (editor && !p.classYear) chips.push(`<span class="chip muted">No class year yet</span>`);
@@ -274,16 +299,19 @@
       </section>
       ${editor ? "" : `<p class="is-you">Is this you? <a href="#/join">Add or update your photo and info</a></p>`}
 
-      <section class="section">
-        <div class="section-head">
-          <h2>${esc(p.name.split(" ")[0])}'s littles</h2>
-          <span class="count">${kids.length ? plural(kids.length, "little") + (total > kids.length ? ` · ${total} total below` : "") : ""}</span>
-          ${editBtn("+ Add a little", `add-little:${p.id}`)}
-        </div>
-        ${kids.length
-          ? `<div class="grid">${kids.map(personCard).join("")}</div>`
-          : `<div class="empty">No littles yet.</div>`}
-      </section>
+      ${levels.length
+        ? levels.map((level, i) => `<section class="section generation">
+            <div class="section-head">
+              <h2>${fam ? `Generation ${gen + i + 1}` : esc(relativeLabel(first, i + 1))}</h2>
+              <span class="count">${fam ? `${esc(relativeLabel(first, i + 1))} · ` : ""}${level.length}</span>
+              ${i === 0 ? editBtn("+ Add a little", `add-little:${p.id}`) : ""}
+            </div>
+            <div class="grid">${level.map((q) => personCard(q, i > 0)).join("")}</div>
+          </section>`).join("")
+        : `<section class="section">
+            <div class="section-head"><h2>${esc(first)}'s littles</h2>${editBtn("+ Add a little", `add-little:${p.id}`)}</div>
+            <div class="empty">No littles yet.</div>
+          </section>`}
 
       ${sibs.length ? `<section class="section">
         <div class="section-head"><h2>Siblings</h2><span class="count">also littles of ${esc(big.name)}</span></div>
