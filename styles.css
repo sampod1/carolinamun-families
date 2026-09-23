@@ -344,9 +344,43 @@ a.card:focus-visible { outline: 3px solid var(--carolina); outline-offset: 2px; 
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 .toast.error { background: #b3261e; }
 
+/* ── Portal + contact ────────────────────────────── */
+.join-link {
+  margin-left: auto; flex: none;
+  padding: 7px 14px; border-radius: 999px;
+  background: #4b9cd3; color: #fff; font-size: 14px; font-weight: 600; white-space: nowrap;
+}
+.join-link:hover { text-decoration: none; background: #3f8cc2; }
+.join-link + .search { margin-left: 0; }
+.hero-cta {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 20px;
+  padding: 9px 16px; border-radius: 999px;
+  background: #fff; color: #13294b; font-weight: 700; font-size: 15px;
+}
+.hero-cta:hover { text-decoration: none; background: #e3f0fa; }
+.contacts { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; }
+.contact { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 15px; word-break: break-all; }
+.contact svg { flex: none; }
+.is-you { margin: 10px 4px 0; font-size: 14px; color: var(--muted); }
+.join-intro {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+  padding: 24px; box-shadow: var(--shadow); margin-bottom: 16px;
+}
+.join-intro h1 { font-size: clamp(24px, 5vw, 32px); }
+.join-intro p { margin: 8px 0 0; color: var(--muted); max-width: 62ch; }
+.join-notes { margin: 14px 0 0; padding-left: 20px; font-size: 14px; color: var(--muted); }
+.join-notes li { margin: 4px 0; }
+.join-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.join-frame {
+  display: block; width: 100%; height: 1500px; border: 0;
+  border-radius: 16px; background: #fff; box-shadow: var(--shadow);
+}
+
 @media (max-width: 600px) {
   .brand-text { display: none; }
   .search { flex: 1 1 auto; }
+  .join-link { padding: 7px 11px; font-size: 13px; }
+  .profile .contacts { justify-content: center; }
   .profile { flex-direction: column; text-align: center; padding: 20px 16px; gap: 14px; }
   .profile .chips { justify-content: center; }
   .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }

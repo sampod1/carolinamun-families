@@ -2,7 +2,7 @@
   "use strict";
 
   const AVATAR_COLORS = ["#13294b", "#1f4a7c", "#2f6ea6", "#3f86bf", "#2c5d8a", "#44628a", "#1d6b8f", "#335c99"];
-  const FIELDS = ["id", "name", "big", "family", "cohort", "classYear", "photo"];
+  const FIELDS = ["id", "name", "big", "family", "cohort", "classYear", "phone", "email", "photo"];
   const PHOTO_SIZE = 480;
   const STORAGE_KEY = "munFamiliesEditor";
 
@@ -40,6 +40,8 @@
         family: raw.family || "",
         cohort: raw.cohort || "",
         classYear: raw.classYear || "",
+        phone: raw.phone || "",
+        email: raw.email || "",
         photo: raw.photo || "",
       });
     });
@@ -173,6 +175,12 @@
     return `<div class="stack">${shown}${more}</div>`;
   }
 
+  const ICONS = {
+    phone: `<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z" fill="currentColor"/></svg>`,
+    mail: `<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3.5 6.5 12 13l8.5-6.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>`,
+    external: `<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  };
+
   const editBtn = (label, action, extra = "") =>
     editor ? `<button type="button" class="btn ${extra}" data-action="${action}">${label}</button>` : "";
 
@@ -194,6 +202,7 @@
           <div class="stat"><b>${inTree}</b><span>members in a family</span></div>
           <div class="stat"><b>${maxGen}</b><span>generations deep</span></div>
         </div>
+        <a class="hero-cta" href="#/join">In CarolinaMUN? Add your photo and info <span aria-hidden="true">›</span></a>
       </section>
 
       <section class="section">
@@ -246,6 +255,10 @@
     if (!big && !fam) lineage = "Waiting to be matched with a big.";
     if (!big && fam) lineage = `Head of ${esc(fam)} · ${plural(total, "descendant")}`;
 
+    const contact = [];
+    if (p.phone) contact.push(`<a class="contact" href="tel:${esc(p.phone.replace(/[^\d+]/g, ""))}">${ICONS.phone}${esc(p.phone)}</a>`);
+    if (p.email) contact.push(`<a class="contact" href="mailto:${esc(p.email)}">${ICONS.mail}${esc(p.email)}</a>`);
+
     view.innerHTML = `
       <nav class="crumbs" aria-label="Lineage">${crumbs.join('<span class="sep" aria-hidden="true">›</span>')}</nav>
 
@@ -255,9 +268,11 @@
           <h1>${esc(p.name)}</h1>
           <div class="chips">${chips.join("")}</div>
           <div class="lineage">${lineage}</div>
+          ${contact.length ? `<div class="contacts">${contact.join("")}</div>` : ""}
         </div>
         ${editBtn("Edit", `edit:${p.id}`, "btn-primary profile-edit")}
       </section>
+      ${editor ? "" : `<p class="is-you">Is this you? <a href="#/join">Add or update your photo and info</a></p>`}
 
       <section class="section">
         <div class="section-head">
@@ -288,6 +303,46 @@
       </div>`;
   }
 
+  // Google Forms embed only from their full docs.google.com link.
+  function formEmbedUrl(url) {
+    try {
+      const u = new URL(url);
+      if (u.hostname !== "docs.google.com" || !u.pathname.includes("/forms/")) return "";
+      u.pathname = u.pathname.replace(/\/(edit|viewform)?$/, "/viewform");
+      u.searchParams.set("embedded", "true");
+      return u.toString();
+    } catch { return ""; }
+  }
+
+  function renderJoin() {
+    document.title = "Add yourself · CarolinaMUN Families";
+    const url = data.joinFormUrl || "";
+    const embed = url && formEmbedUrl(url);
+    let body;
+    if (!url) {
+      body = `<div class="empty">The sign-up form isn't open yet. Check back soon.${editor ? `<br><br>${editBtn("Add the form link", "set-form", "btn-primary")}` : ""}</div>`;
+    } else {
+      body = `
+        <div class="join-actions">
+          <a class="btn btn-primary" href="${esc(url)}" target="_blank" rel="noopener">Open the form ${ICONS.external}</a>
+          ${editBtn("Change form link", "set-form")}
+        </div>
+        ${embed ? `<iframe class="join-frame" src="${esc(embed)}" title="CarolinaMUN family tree sign-up form" loading="lazy">Loading…</iframe>` : ""}`;
+    }
+    view.innerHTML = `
+      <nav class="crumbs"><a href="#/">All families</a><span class="sep" aria-hidden="true">›</span><span class="here">Add yourself</span></nav>
+      <section class="join-intro">
+        <h1>Add yourself to the family tree</h1>
+        <p>Send in your photo, name, class year, phone number and email. An exec member reviews every submission, and once it's approved you'll show up on the site.</p>
+        <ul class="join-notes">
+          <li><b>Heads up:</b> your phone number and email will be visible to anyone who has this site's link.</li>
+          <li>Uploading a photo asks you to sign in to Google. If it doesn't work below, use <b>Open the form</b>.</li>
+          <li>Already on the site and want to change something? Just submit again.</li>
+        </ul>
+      </section>
+      ${body}`;
+  }
+
   function renderMessage(html) {
     view.innerHTML = `<div class="empty">${html}</div>`;
   }
@@ -299,6 +354,7 @@
     if (!page) renderHome();
     else if (page === "p" && people.has(arg)) renderPerson(people.get(arg));
     else if (page === "waiting") renderWaiting();
+    else if (page === "join") renderJoin();
     else { document.title = "Not found · CarolinaMUN Families"; renderMessage(`We couldn't find that person. <a href="#/">Back to all families</a>`); }
     if (hash !== lastRoute) {
       window.scrollTo(0, 0);
@@ -427,7 +483,7 @@
       FIELDS.forEach((k) => { if (p[k]) o[k] = p[k]; });
       return "    " + JSON.stringify(o);
     });
-    return `{\n  "updated": ${JSON.stringify(d.updated || "")},\n  "people": [\n${lines.join(",\n")}\n  ]\n}\n`;
+    return `{\n  "updated": ${JSON.stringify(d.updated || "")},\n  "joinFormUrl": ${JSON.stringify(d.joinFormUrl || "")},\n  "people": [\n${lines.join(",\n")}\n  ]\n}\n`;
   }
 
   // Re-reads the latest data.json right before saving, so two editors don't overwrite each other.
@@ -604,7 +660,7 @@
 
   // mode: "edit" (existing person) or "new"; preset fills a new person's fields.
   function openPersonEditor(existing, preset = {}) {
-    const p = existing || { id: "", name: "", bigId: preset.bigId || null, family: "", cohort: preset.cohort || "", classYear: "", photo: "" };
+    const p = existing || { id: "", name: "", bigId: preset.bigId || null, family: "", cohort: preset.cohort || "", classYear: "", phone: "", email: "", photo: "" };
     const blocked = existing ? descendantIds(p.id).add(p.id) : new Set();
     const bigOptions = [...people.values()]
       .filter((o) => !blocked.has(o.id))
@@ -630,6 +686,10 @@
         <div class="row2">
           <label>Class year<input name="classYear" value="${esc(p.classYear)}" placeholder="'28 or Sophomore" autocomplete="off"></label>
           <label>MUN cohort<input name="cohort" value="${esc(p.cohort)}" list="cohort-list" placeholder="2026–27" autocomplete="off"></label>
+        </div>
+        <div class="row2">
+          <label>Phone<input name="phone" type="tel" value="${esc(p.phone)}" placeholder="(919) 555-0123" autocomplete="off"></label>
+          <label>Email<input name="email" type="email" value="${esc(p.email)}" placeholder="name@unc.edu" autocomplete="off"></label>
         </div>
         <datalist id="cohort-list">${cohorts.map((c) => `<option value="${esc(c)}">`).join("")}</datalist>
         <label>Big
@@ -709,6 +769,8 @@
           family: big ? "" : f.get("family").trim(),
           cohort: f.get("cohort").trim(),
           classYear: f.get("classYear").trim(),
+          phone: f.get("phone").trim(),
+          email: f.get("email").trim(),
         };
 
         try {
@@ -738,6 +800,36 @@
     });
   }
 
+  function openFormLinkEditor() {
+    openDialog(`
+      <form class="form" novalidate>
+        <h2>Sign-up form link</h2>
+        <p class="hint">Paste your Google Form's link (from <b>Send → link icon</b>, or the address bar while previewing the form). Leave it blank to close sign-ups.</p>
+        <label>Form link<input name="url" type="url" value="${esc(data.joinFormUrl || "")}" placeholder="https://docs.google.com/forms/d/e/…/viewform" autocomplete="off"></label>
+        <div class="form-status" role="status"></div>
+        <div class="actions">
+          <button type="button" class="btn" data-close>Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>`, (d) => {
+      const form = d.querySelector("form");
+      form.elements.url.focus();
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const url = form.elements.url.value.trim();
+        if (url && !/^https:\/\//.test(url)) return showFormError(form, new Error("That doesn't look like a link. It should start with https://"));
+        setBusy(form, true, "Saving…");
+        try {
+          await commitChange((d2) => { d2.joinFormUrl = url; }, url ? "Set sign-up form link" : "Close sign-ups");
+          dialog.dataset.busy = "";
+          dialog.close();
+          route();
+          toast(url ? "Form link saved. Live for everyone in about a minute." : "Sign-ups closed.");
+        } catch (err) { showFormError(form, err); }
+      });
+    });
+  }
+
   // One click handler for every edit button on the page.
   document.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-action]");
@@ -749,6 +841,7 @@
     else if (action === "add-little") openPersonEditor(null, { bigId: arg, title: `Add a little for ${people.get(arg).name}`, cohort: currentCohort() });
     else if (action === "add-waiting") openPersonEditor(null, { title: "Add a new member", cohort: currentCohort() });
     else if (action === "new-family") openPersonEditor(null, { title: "Start a new family" });
+    else if (action === "set-form") openFormLinkEditor();
   });
 
   // The academic year we're in: Aug–Dec counts as the start of a new one.
