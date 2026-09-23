@@ -155,40 +155,40 @@
     return bits.join(" · ");
   }
 
-  // showBig: add a "Little of …" line, for generations where cards have different bigs.
-  function personCard(p, showBig = false) {
-    const n = littlesOf(p.id).length;
-    const foot = n
-      ? `<div class="foot has">${plural(n, "little")} <span aria-hidden="true">›</span></div>`
-      : `<div class="foot">No littles yet</div>`;
-    const big = showBig && p.bigId ? people.get(p.bigId) : null;
-    return `<a class="card" href="${link(p)}">
-      ${avatar(p)}
-      <div class="name">${esc(p.name)}</div>
-      <div class="sub">${esc(yearLine(p)) || "&nbsp;"}</div>
-      ${big ? `<div class="little-of">Little of <b>${esc(big.name)}</b></div>` : ""}
-      ${foot}
-    </a>`;
-  }
-
   const bySize = (a, b) => descendants(b.id) - descendants(a.id) || a.name.localeCompare(b.name);
 
-  // Everyone below p, one list per generation, with siblings kept next to each other.
-  function generationsBelow(p) {
-    const levels = [];
-    let current = [p];
-    while (current.length) {
-      current = current.flatMap((q) => littlesOf(q.id).sort(bySize));
-      if (current.length) levels.push(current);
-    }
-    return levels;
+  // Nested lists; styles.css draws the connector lines between bigs and littles.
+  function treeNode(p, currentId) {
+    const kids = littlesOf(p.id).sort(bySize);
+    const here = p.id === currentId;
+    const sub = p.classYear ? classLabel(p.classYear) : "";
+    return `<li>
+      <a class="node${here ? " current" : ""}" href="${link(p)}"${here ? ' aria-current="page"' : ""}>
+        ${avatar(p, "sm")}
+        <span class="node-name">${esc(p.name)}</span>
+        <span class="node-sub">${esc(sub)}</span>
+      </a>
+      ${kids.length ? `<ul>${kids.map((k) => treeNode(k, currentId)).join("")}</ul>` : ""}
+    </li>`;
   }
 
-  function relativeLabel(first, k) {
-    if (k === 1) return `${first}'s littles`;
-    if (k === 2) return `${first}'s grand-littles`;
-    if (k === 3) return `${first}'s great-grand-littles`;
-    return `${k} generations below ${first}`;
+  function familyTree(head, currentId) {
+    const rows = generations(head.id);
+    const labels = Array.from({ length: rows }, (_, i) => `<div class="gen-label"><span>Generation</span> ${i + 1}</div>`).join("");
+    return `<div class="tree-wrap">
+      <div class="gen-rail" aria-hidden="true">${labels}</div>
+      <div class="tree-scroll"><ul class="tree">${treeNode(head, currentId)}</ul></div>
+    </div>`;
+  }
+
+  // Wide trees scroll sideways; start with the highlighted person in view.
+  function centerCurrentNode() {
+    const box = view.querySelector(".tree-scroll");
+    const node = box && box.querySelector(".node.current");
+    if (!box || !node || box.scrollWidth <= box.clientWidth) return;
+    const boxRect = box.getBoundingClientRect();
+    const nodeRect = node.getBoundingClientRect();
+    box.scrollLeft += nodeRect.left - boxRect.left - (box.clientWidth - nodeRect.width) / 2;
   }
 
   function avatarStack(list, max = 5) {
@@ -256,7 +256,7 @@
     const line = ancestors(p);
     const big = line[line.length - 1];
     const gen = line.length + 1;
-    const levels = generationsBelow(p);
+    const head = headOf(p);
     const first = p.name.split(" ")[0];
     const sibs = big ? littlesOf(big.id).filter((s) => s.id !== p.id) : [];
     const fam = familyName(p);
@@ -299,15 +299,15 @@
       </section>
       ${editor ? "" : `<p class="is-you">Is this you? <a href="#/join">Add or update your photo and info</a></p>`}
 
-      ${levels.length
-        ? levels.map((level, i) => `<section class="section generation">
+      ${fam
+        ? `<section class="section">
             <div class="section-head">
-              <h2>${fam ? `Generation ${gen + i + 1}` : esc(relativeLabel(first, i + 1))}</h2>
-              <span class="count">${fam ? `${esc(relativeLabel(first, i + 1))} · ` : ""}${level.length}</span>
-              ${i === 0 ? editBtn("+ Add a little", `add-little:${p.id}`) : ""}
+              <h2>${esc(/family$/i.test(fam) ? fam : `${fam} family`)} tree</h2>
+              <span class="count">${plural(descendants(head.id) + 1, "member")} · ${plural(generations(head.id), "generation")}</span>
+              ${editBtn("+ Add a little", `add-little:${p.id}`)}
             </div>
-            <div class="grid">${level.map((q) => personCard(q, i > 0)).join("")}</div>
-          </section>`).join("")
+            ${familyTree(head, p.id)}
+          </section>`
         : `<section class="section">
             <div class="section-head"><h2>${esc(first)}'s littles</h2>${editBtn("+ Add a little", `add-little:${p.id}`)}</div>
             <div class="empty">No littles yet.</div>
@@ -317,6 +317,7 @@
         <div class="section-head"><h2>Siblings</h2><span class="count">also littles of ${esc(big.name)}</span></div>
         <div class="siblings">${sibs.map((s) => `<a class="sib" href="${link(s)}">${avatar(s, "xs")}${esc(s.name)}</a>`).join("")}</div>
       </section>` : ""}`;
+    centerCurrentNode();
   }
 
   function renderWaiting() {

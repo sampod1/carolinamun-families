@@ -35,6 +35,7 @@
     --chip-bg: #1f3654;
     --chip-text: #d6e8f7;
   }
+  :root:not([data-theme="light"]) .tree-wrap { --line: #3a5577; }
 }
 :root[data-theme="dark"] {
   --carolina: #7bbbe6;
@@ -52,6 +53,7 @@
   --chip-bg: #1f3654;
   --chip-text: #d6e8f7;
 }
+:root[data-theme="dark"] .tree-wrap { --line: #3a5577; }
 
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
@@ -181,15 +183,77 @@ a.card:focus-visible { outline: 3px solid var(--carolina); outline-offset: 2px; 
   display: flex; justify-content: center; align-items: center; gap: 6px;
 }
 .card .foot.has { color: var(--link); font-weight: 600; }
-.card .little-of { margin-top: 6px; font-size: 12.5px; color: var(--muted); }
-.card .little-of b { color: var(--text); font-weight: 600; }
-
-.generation .section-head h2 { display: flex; align-items: center; gap: 10px; }
-.generation .section-head h2::before {
-  content: ""; width: 10px; height: 10px; border-radius: 50%;
-  background: var(--carolina); box-shadow: 0 0 0 4px var(--carolina-soft);
+/* ── Family tree ─────────────────────────────────── */
+.tree-wrap {
+  --node-w: 124px;
+  --node-h: 122px;
+  --gap: 44px;            /* vertical space between generations */
+  --line: #b7cbe1;
+  display: flex;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
 }
-.generation + .generation { margin-top: 28px; padding-top: 24px; border-top: 1px dashed var(--border); }
+.gen-rail {
+  flex: none; width: 92px;
+  display: flex; flex-direction: column; gap: var(--gap);
+  padding: 20px 0 20px 14px;
+  background: var(--surface-2);
+  border-right: 1px solid var(--border);
+}
+.gen-label {
+  height: var(--node-h);
+  display: flex; align-items: center;
+  font-size: 12px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.04em;
+}
+.gen-label span { margin-right: 4px; }
+.tree-scroll { flex: 1; min-width: 0; overflow-x: auto; padding: 20px 12px; position: relative; }
+.tree, .tree ul { list-style: none; margin: 0; padding: 0; display: flex; justify-content: center; }
+.tree { width: max-content; margin: 0 auto; }
+.tree ul { position: relative; padding-top: calc(var(--gap) / 2); }
+.tree li { position: relative; display: flex; flex-direction: column; align-items: center; padding: calc(var(--gap) / 2) 5px 0; }
+.tree > li { padding-top: 0; }
+
+/* Vertical line down from a big to the bar above their littles. */
+.tree ul::before {
+  content: ""; position: absolute; top: 0; left: 50%;
+  height: calc(var(--gap) / 2); border-left: 2px solid var(--line);
+}
+/* Horizontal bar across siblings, plus a short drop into each little. */
+.tree li::before, .tree li::after {
+  content: ""; position: absolute; top: 0; width: 50%;
+  height: calc(var(--gap) / 2); border-top: 2px solid var(--line);
+}
+.tree li::before { right: 50%; }
+.tree li::after { left: 50%; border-left: 2px solid var(--line); }
+.tree > li::before, .tree > li::after { display: none; }
+.tree li:first-child::before, .tree li:last-child::after { border-top: 0; }
+.tree li:last-child::before { border-right: 2px solid var(--line); border-radius: 0 10px 0 0; }
+.tree li:first-child::after { border-radius: 10px 0 0 0; }
+.tree li:only-child::before { display: none; }
+.tree li:only-child::after { border-top: 0; border-radius: 0; }
+
+.node {
+  width: var(--node-w); height: var(--node-h);
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 4px;
+  padding: 12px 8px 10px;
+  background: var(--surface); color: var(--text);
+  border: 1.5px solid var(--border); border-radius: 14px;
+  text-align: center;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+.node:hover { text-decoration: none; border-color: var(--carolina); box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+.node:focus-visible { outline: 3px solid var(--carolina); outline-offset: 2px; }
+.node .avatar { box-shadow: none; }
+.node-name {
+  font-size: 13.5px; font-weight: 650; line-height: 1.2;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.node-sub { font-size: 11.5px; color: var(--muted); line-height: 1.2; }
+.node.current { border-color: var(--navy); background: var(--carolina-soft); box-shadow: 0 0 0 3px var(--carolina); }
 
 .card.row { flex-direction: row; text-align: left; align-items: center; gap: 12px; padding: 10px 12px; }
 .card.row .name { margin-top: 0; font-size: 15px; }
@@ -401,4 +465,8 @@ a.card:focus-visible { outline: 3px solid var(--carolina); outline-offset: 2px; 
   .profile-edit { align-self: center; }
   .row2 { grid-template-columns: 1fr; }
   .section-head { flex-wrap: wrap; }
+  .tree-wrap { --node-w: 104px; --node-h: 116px; --gap: 36px; }
+  .gen-rail { width: 34px; padding-left: 0; align-items: center; }
+  .gen-label { font-size: 13px; }
+  .gen-label span { display: none; }
 }
