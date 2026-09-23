@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  const AVATAR_COLORS = ["#13294b", "#1f4a7c", "#2f6ea6", "#3f86bf", "#2c5d8a", "#44628a", "#1d6b8f", "#335c99"];
+  const AVATAR_COLORS = ["#004286", "#091128", "#0b3a73", "#1d5fa3", "#15396e", "#2a6cb3", "#0e2c5c", "#23508a"];
   const FIELDS = ["id", "name", "big", "family", "cohort", "classYear", "phone", "email", "photo"];
   const PHOTO_SIZE = 480;
   const STORAGE_KEY = "munFamiliesEditor";
@@ -241,14 +241,25 @@
 
     view.innerHTML = `
       <section class="hero">
-        <h1>MUNtorship Family Tree</h1>
-        <p>Every big and little in CarolinaMUN. Pick a family, then click through a big's littles, and their littles after that.</p>
-        <div class="stats">
-          <div class="stat"><b>${families.length}</b><span>families</span></div>
-          <div class="stat"><b>${inTree}</b><span>members in a family</span></div>
-          <div class="stat"><b>${maxGen}</b><span>generations deep</span></div>
+        <div class="hero-main">
+          <div class="wordmark wordmark-lg" role="img" aria-label="CarolinaMUN: Chapel Hill's Elite Model UN Delegation">
+            <span class="wm-name">CarolinaMUN</span>
+            <span class="wm-tag">Chapel Hill's Elite Model UN Delegation</span>
+          </div>
+          <h1 class="hero-title"><span class="hero-kicker">MUNtorship</span><span class="hero-script">Family Tree</span></h1>
+          <p>Every big and little in CarolinaMUN. Pick a family, then click through a big's littles, and their littles after that.</p>
+          <div class="stats">
+            <div class="stat"><b>${families.length}</b><span>families</span></div>
+            <div class="stat"><b>${inTree}</b><span>members in a family</span></div>
+            <div class="stat"><b>${maxGen}</b><span>generations deep</span></div>
+          </div>
+          <a class="hero-cta" href="#/join">In CarolinaMUN? Add your photo and info <span aria-hidden="true">›</span></a>
         </div>
-        <a class="hero-cta" href="#/join">In CarolinaMUN? Add your photo and info <span aria-hidden="true">›</span></a>
+        <div class="badge" aria-hidden="true">
+          <span class="badge-name">Carolina<br>MUN</span>
+          <span class="badge-rule"></span>
+          <span class="badge-tag">Chapel Hill's Elite<br>Model UN Delegation</span>
+        </div>
       </section>
 
       <section class="section">
