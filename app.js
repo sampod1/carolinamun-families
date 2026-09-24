@@ -806,7 +806,16 @@
       const del = form.querySelector("[data-delete]");
       if (del) del.addEventListener("click", async () => {
         if (kids) return showFormError(form, new Error(`${p.name} still has ${plural(kids, "little")}. Give them a different big first.`));
-        if (!confirm(`Delete ${p.name} from the family tree? This can be undone from the repo's history on GitHub.`)) return;
+        // Confirm inside the dialog; some browsers silently block window.confirm().
+        if (!del.dataset.armed) {
+          del.dataset.armed = "1";
+          del.textContent = "Click again to delete";
+          del.classList.add("armed");
+          const status = form.querySelector(".form-status");
+          status.textContent = `Delete ${p.name} from the family tree? It can be undone from the repo's history on GitHub.`;
+          status.classList.add("error");
+          return;
+        }
         setBusy(form, true, "Deleting…");
         try {
           await commitChange((d2) => { d2.people = d2.people.filter((x) => x.id !== p.id); }, `Remove ${p.name}`);

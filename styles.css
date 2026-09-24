@@ -413,6 +413,7 @@ a.card:focus-visible { outline: 3px solid var(--carolina); outline-offset: 2px; 
 .btn-quiet { border-color: transparent; background: transparent; color: var(--muted); }
 .btn-danger { color: #b3261e; border-color: transparent; background: transparent; }
 .btn-danger:hover { border-color: #b3261e; }
+.btn-danger.armed { background: #b3261e; border-color: #b3261e; color: #fff; }
 .section-head:has(.btn) { justify-content: flex-start; }
 .section-head .btn { margin-left: auto; }
 .profile-body { flex: 1; min-width: 0; }
