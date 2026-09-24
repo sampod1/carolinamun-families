@@ -1,5 +1,5 @@
 {
-  "updated": "September 23, 2026",
+  "updated": "September 24, 2026",
   "joinFormUrl": "https://docs.google.com/forms/d/e/1FAIpQLSftjTA48D5fOTp3gxpkB6X4tg4hsZouG2v5kEf1j7DdsJbHmA/viewform",
   "people": [
     {"id":"sam-podgoreanu","name":"Sam Podgoreanu","family":"Freshman 15","cohort":"Before 2025–26","classYear":"2029","phone":"(919) 260-4604","email":"sam.podgoreanu@gmail.com","photo":"photos/sam-podgoreanu.jpg?v=1790205424634"},
@@ -44,7 +44,6 @@
     {"id":"lincoln-doolittle","name":"Lincoln Doolittle","big":"luke-sheldon","cohort":"2026–27","classYear":"2030","phone":"(215) 734-9686","email":"mynameislincolnjames@gmail.com"},
     {"id":"luke-garner","name":"Luke Garner","family":"LAG Enthusiasts","cohort":"Before 2025–26","classYear":"2028","phone":"(252) 361-4855","email":"lukegarner252@gmail.com"},
     {"id":"aiden-lang","name":"Aiden Lang","big":"luke-garner","cohort":"2025–26","classYear":"2028","phone":"(252) 833-2869","email":"alangbro07@gmail.com"},
-    {"id":"emma-cheney","name":"Emma Cheney","big":"luke-garner","cohort":"2025–26"},
     {"id":"justin-jackson","name":"Justin Jackson","big":"luke-garner","cohort":"2025–26","classYear":"2029","phone":"(919) 360-6739","email":"justincjackson44@gmail.com"},
     {"id":"mikayla-holden","name":"Mikayla Holden","big":"luke-garner","cohort":"2025–26","phone":"(828) 764-5741","email":"mikaylah@ad.unc.edu"},
     {"id":"evelyn-brown","name":"Evelyn Brown","big":"aiden-lang","cohort":"2026–27","classYear":"2030","phone":"(516) 757-4270","email":"evelynrbrown30@gmail.com"},
