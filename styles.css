@@ -84,12 +84,30 @@ h1, h2, h3 { line-height: 1.2; margin: 0; }
 }
 .topbar-inner {
   max-width: 1100px; margin: 0 auto;
-  padding: 10px 16px;
+  padding: 7px 16px;
   display: flex; align-items: center; gap: 16px;
 }
 .brand { display: flex; align-items: center; gap: 10px; color: inherit; white-space: nowrap; }
 .brand:hover { text-decoration: none; }
 .brand-script { font-family: var(--font-script); font-size: 24px; line-height: 1; color: #fefcfb; padding-top: 2px; }
+
+/* Round CarolinaMUN badge, per the style guide */
+.logo-badge {
+  position: relative; overflow: hidden; flex: none;
+  width: 60px; height: 60px; border-radius: 50%;
+  border: 1.5px solid #fefcfb; background: #091128;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  line-height: 1; color: var(--carolina); font-weight: 800; text-transform: uppercase;
+}
+.logo-badge::before {
+  content: ""; position: absolute; inset: 0;
+  background: url("assets/topo.svg") 30% 40% / 900% no-repeat;
+  opacity: 0.4;
+}
+.logo-badge > * { position: relative; }
+.lb-top { font-size: 7.4px; letter-spacing: 0.02em; }
+.lb-bot { font-size: 16px; margin-top: 1px; letter-spacing: 0.01em; }
+.logo-badge + .brand-script { font-size: 26px; }
 
 /* ── CarolinaMUN wordmark (boxed name + tagline, per the style guide) ── */
 .wordmark {
@@ -107,8 +125,6 @@ h1, h2, h3 { line-height: 1.2; margin: 0; }
   color: #fefcfb; font-weight: 500; white-space: nowrap; line-height: 1.1;
 }
 .wm-tag::before, .wm-tag::after { content: ""; flex: 1; min-width: 10px; height: 3px; border-radius: 2px; background: #fefcfb; }
-.wordmark-sm { padding: 4px 9px 5px; border-width: 1.5px; border-radius: 7px; }
-.wordmark-sm .wm-name { font-size: 17px; }
 .wordmark-lg .wm-name { font-size: clamp(30px, 6.4vw, 56px); }
 .wordmark-lg .wm-tag { font-size: clamp(10.5px, 1.7vw, 15px); }
 
@@ -186,22 +202,6 @@ main {
 .stat b { display: block; font-family: var(--font-head); font-weight: 600; font-size: 30px; line-height: 1.05; color: var(--carolina); }
 .stat span { font-size: 12.5px; color: #c3d3ea; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
 
-.badge {
-  position: relative; overflow: hidden; flex: none;
-  width: 220px; height: 220px; border-radius: 50%;
-  border: 2px solid #fefcfb;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
-  background: #091128;
-}
-.badge::before {
-  content: ""; position: absolute; inset: 0;
-  background: url("assets/topo.svg") 30% 40% / 420% no-repeat;
-  opacity: 0.35;
-}
-.badge > * { position: relative; }
-.badge-name { font-weight: 800; text-transform: uppercase; font-size: 31px; line-height: 0.98; letter-spacing: 0.01em; color: var(--carolina); }
-.badge-rule { width: 64%; height: 2px; background: #fefcfb; margin: 10px 0 8px; }
-.badge-tag { font-size: 13px; font-weight: 500; line-height: 1.35; color: #fefcfb; }
 
 /* ── Cards ───────────────────────────────────────── */
 .grid {
@@ -512,9 +512,9 @@ a.card:focus-visible { outline: 3px solid var(--carolina); outline-offset: 2px; 
 }
 
 @media (max-width: 600px) {
-  .brand-script { display: none; }
-  .wordmark-sm .wm-name { font-size: 14px; }
-  .badge { display: none; }
+  .logo-badge { width: 54px; height: 54px; }
+  .lb-top { font-size: 6.6px; }
+  .lb-bot { font-size: 14.5px; }
   .hero { padding: 24px 18px; }
   .topbar-inner { flex-wrap: wrap; row-gap: 10px; }
   .search { order: 3; flex: 1 1 100%; margin-left: 0; }

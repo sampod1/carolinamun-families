@@ -255,11 +255,6 @@
           </div>
           <a class="hero-cta" href="#/join">In CarolinaMUN? Add your photo and info <span aria-hidden="true">›</span></a>
         </div>
-        <div class="badge" aria-hidden="true">
-          <span class="badge-name">Carolina<br>MUN</span>
-          <span class="badge-rule"></span>
-          <span class="badge-tag">Chapel Hill's Elite<br>Model UN Delegation</span>
-        </div>
       </section>
 
       <section class="section">
