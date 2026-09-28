@@ -239,7 +239,7 @@ a.card:focus-visible { outline: 3px solid var(--carolina); outline-offset: 2px; 
 /* ── Family tree ─────────────────────────────────── */
 .tree-wrap {
   --node-w: 124px;
-  --node-h: 122px;
+  --node-h: 128px;
   --pill-h: 34px;
   --gap: 44px;            /* vertical space between generations */
   --line: #a9cbef;
@@ -315,6 +315,17 @@ a.card:focus-visible { outline: 3px solid var(--carolina); outline-offset: 2px; 
   font-family: var(--font-head); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;
 }
 .gen-spacer { height: var(--pill-h); flex: none; }
+.node { position: relative; }
+.branch-tag {
+  position: absolute; top: -11px; left: 50%; transform: translateX(-50%);
+  padding: 2px 9px; border-radius: 999px; white-space: nowrap;
+  background: var(--navy); color: #fefcfb; border: 1.5px solid var(--surface);
+  font-family: var(--font-head); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.node.branch-root { border-color: var(--navy); }
+.chip.branch { background: var(--navy); color: #fefcfb; }
+.card .branches { margin-top: 4px; font-size: 12.5px; color: var(--muted); }
+.card .branches b { color: var(--text); font-weight: 600; }
 .node.current { border-color: var(--navy); background: var(--carolina-soft); box-shadow: 0 0 0 3px var(--carolina); }
 
 .card.row { flex-direction: row; text-align: left; align-items: center; gap: 12px; padding: 10px 12px; }
@@ -531,7 +542,9 @@ a.card:focus-visible { outline: 3px solid var(--carolina); outline-offset: 2px; 
   .profile-edit { align-self: center; }
   .row2 { grid-template-columns: 1fr; }
   .section-head { flex-wrap: wrap; }
-  .tree-wrap { --node-w: 104px; --node-h: 116px; --gap: 36px; }
+  .tree-wrap { --node-w: 114px; --node-h: 128px; --gap: 36px; }
+  .node-name { font-size: 12.5px; }
+  .node { padding-left: 6px; padding-right: 6px; }
   .gen-rail { width: 34px; padding-left: 0; align-items: center; }
   .gen-label { font-size: 13px; }
   .gen-label span { display: none; }

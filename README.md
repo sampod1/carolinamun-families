@@ -73,4 +73,8 @@ Each person in `data.json` looks like:
 
 **Changing the site's code?** Bump the `?v=` tag on `styles.css` and `app.js` in `index.html` so browsers fetch the new files right away instead of using cached ones for up to 10 minutes.
 
+**Families, co-heads and branches** (all set with the *Family or branch name* box in Edit):
+- No big + a family name: they head a family. Give two heads the same family name to make them co-heads.
+- A big + a name: they start a named **branch** inside their big's family (e.g. Sam Podgoreanu starts *Freshman 15* under Pranav Nemani). Everyone below them is tagged with the branch.
+
 **Lineage rule:** a person's big is whoever they were *first* assigned to. Returners who get put in a new group for points later keep their original big here.

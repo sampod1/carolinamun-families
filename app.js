@@ -125,6 +125,10 @@
   const familySize = (f) => f.heads.reduce((n, h) => n + 1 + descendants(h.id), 0);
   const familyDepth = (f) => Math.max(...f.heads.map((h) => generations(h.id)));
   const familyLittles = (f) => f.heads.flatMap((h) => littlesOf(h.id));
+  // A branch is a named sub-family: someone who has a big *and* a family name.
+  const isBranchRoot = (p) => Boolean(p.bigId && p.family);
+  const branchOf = (p) => [...ancestors(p), p].reverse().find(isBranchRoot) || null;
+  const familyBranches = (f) => [...people.values()].filter((p) => isBranchRoot(p) && f.heads.includes(headOf(p)));
 
   // ── Render helpers ──────────────────────────────────────────
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -181,7 +185,8 @@
     const here = p.id === currentId;
     const sub = p.classYear ? classLabel(p.classYear) : "";
     return `<li>
-      <a class="node${here ? " current" : ""}" href="${link(p)}"${here ? ' aria-current="page"' : ""}>
+      <a class="node${here ? " current" : ""}${isBranchRoot(p) ? " branch-root" : ""}" href="${link(p)}"${here ? ' aria-current="page"' : ""}>
+        ${isBranchRoot(p) ? `<span class="branch-tag">${esc(p.family)}</span>` : ""}
         ${avatar(p, "sm")}
         <span class="node-name">${esc(p.name)}</span>
         <span class="node-sub">${esc(sub)}</span>
@@ -264,6 +269,7 @@
               <div class="heads">${f.heads.map((h) => avatar(h)).join("")}</div>
               <div class="family-name">${esc(f.name)}</div>
               <div class="sub">Started by ${esc(f.heads.map((h) => h.name).join(" & "))}</div>
+              ${familyBranches(f).length ? `<div class="branches">Includes ${familyBranches(f).map((b) => `<b>${esc(b.family)}</b>`).join(", ")}</div>` : ""}
               ${avatarStack(familyLittles(f))}
               <div class="foot has">${plural(familySize(f), "member")} · ${plural(familyDepth(f), "generation")} <span aria-hidden="true">›</span></div>
             </a>`).join("")}
@@ -300,7 +306,10 @@
     crumbs.push(`<span class="here">${esc(line.length || coHeads.length ? p.name : fam || p.name)}</span>`);
 
     const chips = [];
-    if (fam) chips.push(`<span class="chip">${esc(fam)}</span>`, `<span class="chip">Generation ${gen}</span>`);
+    const branch = branchOf(p);
+    if (fam) chips.push(`<span class="chip">${esc(fam)}</span>`);
+    if (fam && branch) chips.push(`<span class="chip branch">${esc(branch.family)} branch</span>`);
+    if (fam) chips.push(`<span class="chip">Generation ${gen}</span>`);
     if (p.classYear) chips.push(`<span class="chip">${esc(classLabel(p.classYear))}</span>`);
     if (p.cohort) chips.push(`<span class="chip">${esc(cohortLabel(p.cohort))}</span>`);
     if (editor && !p.classYear) chips.push(`<span class="chip muted">No class year yet</span>`);
@@ -310,6 +319,7 @@
     if (line.length > 1) lineage += ` · Grand-big: <a href="${link(line[line.length - 2])}">${esc(line[line.length - 2].name)}</a>`;
     if (!big && !fam) lineage = "Waiting to be matched with a big.";
     if (!big && fam) lineage = `Head of ${esc(fam)} · ${plural(total, "descendant")}`;
+    if (isBranchRoot(p)) lineage += ` · Starts the <b>${esc(p.family)}</b> branch · ${plural(total, "descendant")}`;
     if (coHeads.length) lineage = `Co-head of ${esc(fam)} with ${coHeads.map((h) => `<a href="${link(h)}">${esc(h.name)}</a>`).join(" & ")} · ${plural(total, "descendant")}`;
 
     const contact = [];
@@ -444,7 +454,7 @@
     results.innerHTML = matches.length
       ? matches.map((p, i) => `<li role="option" data-id="${p.id}" aria-selected="${i === active}">
           ${avatar(p, "xs")}
-          <div><div class="sr-name">${esc(p.name)}</div><div class="sr-sub">${esc(familyName(p) || "Waiting on a big")}</div></div>
+          <div><div class="sr-name">${esc(p.name)}</div><div class="sr-sub">${esc([branchOf(p) && branchOf(p).family, familyName(p)].filter(Boolean).join(" · ") || "Waiting on a big")}</div></div>
         </li>`).join("")
       : `<li class="sr-empty">No one by that name</li>`;
     results.hidden = false;
@@ -763,9 +773,9 @@
             ${bigOptions}
           </select>
         </label>
-        <label class="family-field" ${p.bigId ? "hidden" : ""}>Family name
+        <label class="family-field">Family or branch name
           <input name="family" value="${esc(p.family)}" placeholder="Leave blank if they're waiting on a big" autocomplete="off">
-          <span class="hint small">Fill this in to put them at the top of a family. Use an existing family's name to make them co-heads.</span>
+          <span class="hint small">No big: they head a family (use an existing family's name to make them co-heads). With a big: this names a branch that starts with them, like Freshman 15. Leave blank for neither.</span>
         </label>
         <div class="form-status" role="status"></div>
         <div class="actions">
@@ -777,13 +787,11 @@
       </form>`, (d) => {
       const form = d.querySelector("form");
       const bigSel = form.elements.big;
-      const famField = form.querySelector(".family-field");
       const preview = form.querySelector(".photo-preview");
       const removeBtn = form.querySelector("[data-remove-photo]");
       let newPhoto = null;     // Blob to upload
       let removePhoto = false;
 
-      bigSel.addEventListener("change", () => (famField.hidden = Boolean(bigSel.value)));
 
       form.elements.photo.addEventListener("change", async () => {
         const file = form.elements.photo.files[0];
@@ -840,7 +848,7 @@
         const fields = {
           name,
           big,
-          family: big ? "" : f.get("family").trim(),
+          family: f.get("family").trim(),
           cohort: f.get("cohort").trim(),
           classYear: f.get("classYear").trim(),
           phone: f.get("phone").trim(),
